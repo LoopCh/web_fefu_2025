@@ -1,0 +1,11 @@
+from django.urls import path
+from . import views
+
+app_name = 'fefu_lab'
+
+urlpatterns = [
+    path('', views.home, name='index'),
+    path('about/', views.about, name='about'),
+    path('student/<int:student_id>/', views.student_detail, name='student_detail'),
+    path('course/<slug:course_slag>/', views.course_detail, name='course_detail')
+]

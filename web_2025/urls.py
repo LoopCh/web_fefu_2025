@@ -20,6 +20,8 @@ from django.shortcuts import redirect
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', lambda request: redirect('fefu_lab:index')),
-    path('fefu_lab/', include('fefu_lab.urls'))
+  #  path('', lambda request: redirect('fefu_lab:index')),
+    path('', include('fefu_lab.urls'))
 ]
+
+handler404 = 'fefu_lab.views.page_not_found'

@@ -1,7 +1,8 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, Http404
-from .forms import FeedbackForm, RegistrationForm
+from .forms import FeedbackForm, RegistrationForm, LogonForm
 from .models import UserProfile
+from django.views.decorators.csrf import csrf_protect
 
 STUDENTS_DATA = {
     1: {
@@ -120,6 +121,25 @@ def register(request):
     return render(request, 'fefu_lab/register.html', {
         'form': form,
         'title': 'Регистрация'
+    })
+
+@csrf_protect
+def login(request):
+    if request.method == 'POST':
+        form = LogonForm(request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            request.session['user_id'] = user.id
+            request.session['username'] = user.username
+            return render(request, 'fefu_lab/success.html', {
+                'title': 'Вход',
+                'message': 'Вход прошел успешно.'
+            })
+    else:
+        form = LogonForm()
+    return render(request, 'fefu_lab/login.html', {
+        'form': form,
+        'title': 'Вход'
     })
 
 

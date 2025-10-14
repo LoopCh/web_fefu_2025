@@ -88,3 +88,37 @@ class RegistrationForm(forms.Form):
         if p1 and p2 and p1 != p2:
             raise ValidationError("Пароли не совпадают")
         return cleaned
+    
+class LogonForm(forms.Form):
+    username = forms.CharField(
+        max_length=50,
+        label='Логин',
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+        required=True
+    )
+    password = forms.CharField(
+        label='Пароль',
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        required=True
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        username = cleaned_data.get('username')
+        password = cleaned_data.get('password')
+
+        if username and password:
+            try:
+                user = UserProfile.objects.get(username=username)
+            except UserProfile.DoesNotExist:
+                raise ValidationError("Неверное имя пользователя или пароль.")
+            
+            if password != user.password:
+                raise ValidationError("Неверное имя пользователя или пароль.")
+            
+            self.user_cache = user
+        
+        return cleaned_data
+    
+    def get_user(self):
+        return getattr(self, 'user_cache', None)

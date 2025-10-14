@@ -3,14 +3,17 @@
   <head>
     <meta charset="utf-8">
     <title>{% block title %}{{ title|default:"Сайт" }}{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'fefu_lab/css/style.css' %}">
   </head>
   <body>
     <nav>
       <a href="{% url 'fefu_lab:index' %}">Главная</a> |
       <a href="{% url 'fefu_lab:about' %}">О нас</a> |
-      <a href="{% url 'fefu_lab:feedback' %}">Обратная связь</a> |
       <a href="{% url 'fefu_lab:student_detail' 1 %}">Пример студента</a> |
       <a href="{% url 'fefu_lab:course_detail' 'python-basics' %}">Пример курса</a> |
+      <a href="{% url 'fefu_lab:register' %}">Регистрация</a> |
+      <a href="{% url 'fefu_lab:feedback' %}">Обратная связь</a> |
     </nav>
     <main>{% block content %}{% endblock %}</main>
   </body>

@@ -1,5 +1,7 @@
-from django.shortcuts import render
-from django.http import HttpResponse
+from django.shortcuts import render, redirect
+from django.http import HttpResponse, Http404
+from .forms import FeedbackForm, RegistrationForm
+from .models import UserProfile
 
 STUDENTS_DATA = {
     1: {
@@ -84,8 +86,42 @@ def course_detail(request, course_slug):
         return page_not_found(request, "Курс с таким именем не найден")
 
 
+
 def feedback(request):
-    return HttpResponse('Ok')
+    if request.method == 'POST':
+        form = FeedbackForm(request.POST)
+        if form.is_valid():  # Django запустит clean_<field> и clean()
+            return render(request, 'fefu_lab/success.html', {
+                'title': 'Сообщение отправлено',
+                'message': 'Спасибо за обратную связь!'
+            })
+    else:
+        form = FeedbackForm()
+    return render(request, 'fefu_lab/feedback.html', {
+        'form': form,
+        'title': 'Обратная связь'
+    })
+
+def register(request):
+    if request.method == 'POST':
+        form = RegistrationForm(request.POST)
+        if form.is_valid():
+            UserProfile.objects.create(
+                username=form.cleaned_data['username'],
+                email=form.cleaned_data['email'],
+                password=form.cleaned_data['password'] 
+            )
+            return render(request, 'fefu_lab/success.html', {
+                'title': 'Регистрация',
+                'message': 'Регистрация прошла успешно.'
+            })
+    else:
+        form = RegistrationForm()
+    return render(request, 'fefu_lab/register.html', {
+        'form': form,
+        'title': 'Регистрация'
+    })
+
 
 def page_not_found(request, exception):
     return render(request, '404.html', status=404)

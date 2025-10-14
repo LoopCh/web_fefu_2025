@@ -1,6 +1,24 @@
 {% extends "../base.html" %}
-{% block title %}Студент {{ student_id }}{% endblock %}
+
+{% block title %}Профиль студента {{ student_id }}{% endblock %}
+{% block heading %}Профиль студента {% endblock %}
+
 {% block content %}
   <h1>Студент</h1>
   <p>ID: {{ student_id }}</p>
+
+  <div>
+    <p><strong>ID студента: </strong> {{ student_id }}</p>
+    <p><strong>Информация: </strong> {{ student_info }}</p>
+    <p><strong>Факультет: </strong> {{ faculty }}</p>
+    <p><strong>Статус: </strong> {{ status }}</p>
+  </div>
+
+  <div style="margin-top: 20px;">
+    <ul>
+      {% for sid, s in students.items %}
+       <li><a href="{% url 'fefu_lab:student_detail' sid %}">{{ s.info }}</a></li>
+      {% endfor %}
+    </ul>
+  </div>
 {% endblock %}

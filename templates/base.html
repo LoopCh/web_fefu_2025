@@ -10,6 +10,7 @@
       <a href="{% url 'fefu_lab:about' %}">О нас</a> |
       <a href="{% url 'fefu_lab:feedback' %}">Обратная связь</a> |
       <a href="{% url 'fefu_lab:student_detail' 1 %}">Пример студента</a> |
+      <a href="{% url 'fefu_lab:course_detail' 'python-basics' %}">Пример курса</a> |
     </nav>
     <main>{% block content %}{% endblock %}</main>
   </body>

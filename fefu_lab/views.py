@@ -66,11 +66,23 @@ def student_detail(request, student_id):
             'year': student_data['year']
         })
     else:
-        raise page_not_found(request, "Студент с таким ID не найден")
-   # return render(request, "fefu_lab/student_detail.html", {"student_id": student_id})
+        return page_not_found(request, "Студент с таким ID не найден")
 
 def course_detail(request, course_slug):
-    return render(request, "fefu_lab/course_detail.html", {"course_slug": course_slug})
+    if course_slug in COURSES_DATA:
+        course_data = COURSES_DATA[course_slug]
+        return render(request, 'fefu_lab/course_detail.html', {
+            'courses': COURSES_DATA,
+            'description': course_data['description'],
+            'course_slug': course_slug,
+            'name': course_data['name'],
+            'duration': course_data['duration'],
+            'instructor': course_data['instructor'],
+            'level': course_data['level']
+        })
+    else:
+        return page_not_found(request, "Курс с таким именем не найден")
+
 
 def feedback(request):
     return HttpResponse('Ok')

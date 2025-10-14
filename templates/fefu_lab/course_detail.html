@@ -1,6 +1,23 @@
 {% extends "../base.html" %}
+
 {% block title %}Курс {{ course_slug }}{% endblock %}
+{% block heading %}Курс {% endblock %}
+
 {% block content %}
-  <h1>Курс</h1>
-  <p>Slug: {{ course_slug }}</p>
+  <div>
+    <p><strong>Курс: </strong> {{ course_slug }}</p>
+    <p><strong>Название: </strong> {{ name }}</p>
+    <p><strong>Описание: </strong> {{ description }}</p>
+    <p><strong>Уровень: </strong> {{ instructor }}</p>
+    <p><strong>Инструктор: </strong> {{ instructor }}</p>
+    <p><strong>Длительность: </strong> {{ duration }}</p>
+  </div>
+
+  <div style="margin-top: 20px;">
+    <ul>
+      {% for course_name, c in courses.items %}
+       <li><a href="{% url 'fefu_lab:course_detail' course_name %}">{{ c.name }}</a></li>
+      {% endfor %}
+    </ul>
+  </div>
 {% endblock %}

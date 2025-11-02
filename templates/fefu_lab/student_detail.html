@@ -1,21 +1,52 @@
 {% extends "../base.html" %}
 
-{% block title %}Профиль студента {{ student_id }}{% endblock %}
-{% block heading %}Профиль студента {% endblock %}
+{% block title %}Профиль студента {{ student.full_name }}{% endblock %}
+{% block heading %}Профиль студента{% endblock %}
 
 {% block content %}
   <div>
-    <p><strong>ID студента: </strong> {{ student_id }}</p>
-    <p><strong>Информация: </strong> {{ student_info }}</p>
-    <p><strong>Факультет: </strong> {{ faculty }}</p>
-    <p><strong>Статус: </strong> {{ status }}</p>
+    <p><strong>ID студента: </strong> {{ student.id }}</p>
+    <p><strong>ФИО: </strong> {{ student.full_name }}</p>
+    <p><strong>Email: </strong> {{ student.email }}</p>
+    <p><strong>Факультет: </strong> {{ student.get_faculty_display }}</p>
+    {% if student.birth_date %}
+      <p><strong>Дата рождения: </strong> {{ student.birth_date|date:"d.m.Y" }}</p>
+    {% endif %}
+    <p><strong>Дата регистрации: </strong> {{ student.created_at|date:"d.m.Y" }}</p>
+    <p><strong>Статус: </strong> 
+      {% if student.is_active %}
+        <span style="color: green;">✓ Активный</span>
+      {% else %}
+        <span style="color: red;">✗ Неактивный</span>
+      {% endif %}
+    </p>
+  </div>
+
+  <div style="margin-top: 30px;">
+    <h3>Записи на курсы</h3>
+    {% if enrollments %}
+      <ul>
+        {% for enrollment in enrollments %}
+          <li style="margin-bottom: 10px;">
+            <a href="{% url 'fefu_lab:course_detail' enrollment.course.slug %}">{{ enrollment.course.title }}</a>
+            - {{ enrollment.course.get_level_display }}
+            (Преподаватель: 
+            {% if enrollment.course.instructor %}
+              {{ enrollment.course.instructor.full_name }}
+            {% else %}
+              Не назначен
+            {% endif %})
+            <br>
+            <small style="color: #666;">Записан: {{ enrollment.enrolled_at|date:"d.m.Y" }}</small>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p style="color: #666;">Студент пока не записан ни на один курс.</p>
+    {% endif %}
   </div>
 
   <div style="margin-top: 20px;">
-    <ul>
-      {% for sid, s in students.items %}
-       <li><a href="{% url 'fefu_lab:student_detail' sid %}">{{ s.info }}</a></li>
-      {% endfor %}
-    </ul>
+    <a href="{% url 'fefu_lab:student_list' %}" style="display: inline-block; padding: 10px 20px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 5px;">Все студенты</a>
   </div>
 {% endblock %}

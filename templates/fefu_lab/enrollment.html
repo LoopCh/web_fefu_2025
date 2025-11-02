@@ -1,0 +1,58 @@
+{% extends "../base.html" %}
+
+{% block title %}Запись на курс{% endblock %}
+{% block heading %}Запись на курс: {{ course.title }}{% endblock %}
+
+{% block content %}
+  {% if messages %}
+    {% for message in messages %}
+      <div style="padding: 10px; margin-bottom: 15px; border-radius: 5px; {% if message.tags == 'success' %}background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb;{% else %}background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;{% endif %}">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div style="margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 5px;">
+    <h3>Информация о курсе</h3>
+    <p><strong>Название:</strong> {{ course.title }}</p>
+    <p><strong>Преподаватель:</strong> 
+      {% if course.instructor %}
+        {{ course.instructor.full_name }}
+      {% else %}
+        Не назначен
+      {% endif %}
+    </p>
+    <p><strong>Уровень:</strong> {{ course.get_level_display }}</p>
+    <p><strong>Длительность:</strong> {{ course.duration }} часов</p>
+    <p><strong>Свободных мест:</strong> {{ course.max_students|add:"-"|add:course.enrolled_count }} из {{ course.max_students }}</p>
+  </div>
+
+  <form method="post" style="max-width: 600px;">
+    {% csrf_token %}
+    
+    {% if form.non_field_errors %}
+      <div style="padding: 10px; margin-bottom: 15px; background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; border-radius: 5px;">
+        {{ form.non_field_errors }}
+      </div>
+    {% endif %}
+    
+    {% for field in form %}
+      <div style="margin-bottom: 15px;">
+        <label for="{{ field.id_for_label }}" style="display: block; margin-bottom: 5px; font-weight: bold;">
+          {{ field.label }}{% if field.field.required %} <span style="color: red;">*</span>{% endif %}
+        </label>
+        {{ field }}
+        {% if field.errors %}
+          <div style="color: #721c24; margin-top: 5px; font-size: 14px;">
+            {{ field.errors }}
+          </div>
+        {% endif %}
+      </div>
+    {% endfor %}
+    
+    <div style="margin-top: 20px;">
+      <button type="submit" style="padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px;">Записаться</button>
+      <a href="{% url 'fefu_lab:course_detail' course.slug %}" style="display: inline-block; padding: 10px 20px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 5px;">Отмена</a>
+    </div>
+  </form>
+{% endblock %}

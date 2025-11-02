@@ -1,0 +1,71 @@
+{% extends "../base.html" %}
+
+{% block title %}Курсы{% endblock %}
+{% block heading %}Список курсов{% endblock %}
+
+{% block content %}
+  <div style="margin-bottom: 20px;">
+    <form method="get" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+      <input type="text" name="search" placeholder="Поиск по названию или описанию" value="{{ search_query }}" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; flex: 1; min-width: 200px;">
+      
+      <select name="level" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+        <option value="">Все уровни</option>
+        {% for code, name in level_choices %}
+          <option value="{{ code }}" {% if level == code %}selected{% endif %}>{{ name }}</option>
+        {% endfor %}
+      </select>
+      
+      <button type="submit" style="padding: 8px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Поиск</button>
+      <a href="{% url 'fefu_lab:course_list' %}" style="padding: 8px 15px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 4px;">Сбросить</a>
+    </form>
+  </div>
+
+  {% if page_obj %}
+    <div style="margin-bottom: 20px;">
+      <p>Найдено курсов: <strong>{{ page_obj.paginator.count }}</strong></p>
+    </div>
+
+    <ul style="list-style: none; padding: 0;">
+      {% for course in page_obj %}
+        <li style="margin-bottom: 15px; padding: 15px; border: 1px solid #ddd; border-radius: 5px;">
+          <a href="{% url 'fefu_lab:course_detail' course.slug %}" style="font-size: 18px; font-weight: bold; text-decoration: none; color: #007bff;">{{ course.title }}</a>
+          <br>
+          <p style="margin: 10px 0; color: #333;">{{ course.description|truncatewords:20 }}</p>
+          <small style="color: #666;">
+            <strong>Уровень:</strong> {{ course.get_level_display }} | 
+            <strong>Длительность:</strong> {{ course.duration }} ч. | 
+            <strong>Преподаватель:</strong> 
+            {% if course.instructor %}
+              {{ course.instructor.full_name }}
+            {% else %}
+              Не назначен
+            {% endif %}
+            | 
+            <strong>Записано:</strong> {{ course.enrolled_count }}/{{ course.max_students }}
+          </small>
+        </li>
+      {% endfor %}
+    </ul>
+
+    {# Пагинация #}
+    {% if page_obj.has_other_pages %}
+      <div style="margin-top: 20px; text-align: center;">
+        {% if page_obj.has_previous %}
+          <a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if level %}&level={{ level }}{% endif %}" style="padding: 5px 10px; margin: 0 2px; text-decoration: none; border: 1px solid #ddd; border-radius: 3px;">Первая</a>
+          <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if level %}&level={{ level }}{% endif %}" style="padding: 5px 10px; margin: 0 2px; text-decoration: none; border: 1px solid #ddd; border-radius: 3px;">Предыдущая</a>
+        {% endif %}
+
+        <span style="padding: 5px 10px; margin: 0 5px;">
+          Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if level %}&level={{ level }}{% endif %}" style="padding: 5px 10px; margin: 0 2px; text-decoration: none; border: 1px solid #ddd; border-radius: 3px;">Следующая</a>
+          <a href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if level %}&level={{ level }}{% endif %}" style="padding: 5px 10px; margin: 0 2px; text-decoration: none; border: 1px solid #ddd; border-radius: 3px;">Последняя</a>
+        {% endif %}
+      </div>
+    {% endif %}
+  {% else %}
+    <p>Курсов не найдено.</p>
+  {% endif %}
+{% endblock %}

@@ -1,23 +1,46 @@
 {% extends "../base.html" %}
 
-{% block title %}Курс {{ course_slug }}{% endblock %}
-{% block heading %}Курс {% endblock %}
+{% block title %}Курс {{ course.title }}{% endblock %}
+{% block heading %}{{ course.title }}{% endblock %}
 
 {% block content %}
   <div>
-    <p><strong>Курс: </strong> {{ course_slug }}</p>
-    <p><strong>Название: </strong> {{ name }}</p>
-    <p><strong>Описание: </strong> {{ description }}</p>
-    <p><strong>Уровень: </strong> {{ instructor }}</p>
-    <p><strong>Инструктор: </strong> {{ instructor }}</p>
-    <p><strong>Длительность: </strong> {{ duration }}</p>
+    <p><strong>Курс: </strong> {{ course.slug }}</p>
+    <p><strong>Название: </strong> {{ course.title }}</p>
+    <p><strong>Описание: </strong> {{ course.description }}</p>
+    <p><strong>Уровень: </strong> {{ course.get_level_display }}</p>
+    <p><strong>Инструктор: </strong> 
+      {% if course.instructor %}
+        {{ course.instructor.full_name }} ({{ course.instructor.specialization }})
+      {% else %}
+        Не назначен
+      {% endif %}
+    </p>
+    <p><strong>Длительность: </strong> {{ course.duration }} часов</p>
+    <p><strong>Цена: </strong>
+      {% if course.price == 0 %}
+        Бесплатно
+      {% else %}
+        {{ course.price }} руб.
+      {% endif %}
+    </p>
+    <p><strong>Записано студентов: </strong> {{ course.enrolled_count }} / {{ course.max_students }}</p>
+    
+    {% if course.has_available_seats %}
+      <div style="margin-top: 15px; padding: 10px; background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 5px;">
+        <p style="margin: 0; color: #155724;">✓ На курсе есть свободные места!</p>
+      </div>
+    {% else %}
+      <div style="margin-top: 15px; padding: 10px; background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px;">
+        <p style="margin: 0; color: #856404;">⚠ Все места заняты.</p>
+      </div>
+    {% endif %}
   </div>
 
   <div style="margin-top: 20px;">
-    <ul>
-      {% for course_name, c in courses.items %}
-       <li><a href="{% url 'fefu_lab:course_detail' course_name %}">{{ c.name }}</a></li>
-      {% endfor %}
-    </ul>
+    {% if course.has_available_seats %}
+      <a href="{% url 'fefu_lab:enroll_student' course.slug %}" style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; margin-right: 10px;">Записаться на курс</a>
+    {% endif %}
+    <a href="{% url 'fefu_lab:course_list' %}" style="display: inline-block; padding: 10px 20px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 5px;">Все курсы</a>
   </div>
 {% endblock %}

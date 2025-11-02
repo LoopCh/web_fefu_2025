@@ -1,0 +1,65 @@
+{% extends "../base.html" %}
+
+{% block title %}Студенты{% endblock %}
+{% block heading %}Список студентов{% endblock %}
+
+{% block content %}
+  <div style="margin-bottom: 20px;">
+    <form method="get" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+      <input type="text" name="search" placeholder="Поиск по имени или email" value="{{ search_query }}" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; flex: 1; min-width: 200px;">
+      
+      <select name="faculty" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+        <option value="">Все факультеты</option>
+        {% for code, name in faculty_choices %}
+          <option value="{{ code }}" {% if faculty == code %}selected{% endif %}>{{ name }}</option>
+        {% endfor %}
+      </select>
+      
+      <button type="submit" style="padding: 8px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Поиск</button>
+      <a href="{% url 'fefu_lab:student_list' %}" style="padding: 8px 15px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 4px;">Сбросить</a>
+    </form>
+  </div>
+
+  {% if page_obj %}
+    <div style="margin-bottom: 20px;">
+      <p>Найдено студентов: <strong>{{ page_obj.paginator.count }}</strong></p>
+    </div>
+
+    <ul style="list-style: none; padding: 0;">
+      {% for student in page_obj %}
+        <li style="margin-bottom: 15px; padding: 15px; border: 1px solid #ddd; border-radius: 5px;">
+          <a href="{% url 'fefu_lab:student_detail' student.id %}" style="font-size: 18px; font-weight: bold; text-decoration: none; color: #007bff;">{{ student.full_name }}</a>
+          <br>
+          <small style="color: #666;">
+            {{ student.get_faculty_display }} | {{ student.email }}
+          </small>
+        </li>
+      {% endfor %}
+    </ul>
+
+    {# Пагинация #}
+    {% if page_obj.has_other_pages %}
+      <div style="margin-top: 20px; text-align: center;">
+        {% if page_obj.has_previous %}
+          <a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if faculty %}&faculty={{ faculty }}{% endif %}" style="padding: 5px 10px; margin: 0 2px; text-decoration: none; border: 1px solid #ddd; border-radius: 3px;">Первая</a>
+          <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if faculty %}&faculty={{ faculty }}{% endif %}" style="padding: 5px 10px; margin: 0 2px; text-decoration: none; border: 1px solid #ddd; border-radius: 3px;">Предыдущая</a>
+        {% endif %}
+
+        <span style="padding: 5px 10px; margin: 0 5px;">
+          Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if faculty %}&faculty={{ faculty }}{% endif %}" style="padding: 5px 10px; margin: 0 2px; text-decoration: none; border: 1px solid #ddd; border-radius: 3px;">Следующая</a>
+          <a href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if faculty %}&faculty={{ faculty }}{% endif %}" style="padding: 5px 10px; margin: 0 2px; text-decoration: none; border: 1px solid #ddd; border-radius: 3px;">Последняя</a>
+        {% endif %}
+      </div>
+    {% endif %}
+  {% else %}
+    <p>Студентов не найдено.</p>
+  {% endif %}
+
+  <div style="margin-top: 30px;">
+    <a href="{% url 'fefu_lab:student_register' %}" style="display: inline-block; padding: 10px 20px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px;">+ Зарегистрировать студента</a>
+  </div>
+{% endblock %}

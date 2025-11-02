@@ -1,6 +1,6 @@
 from django import forms
 from django.core.exceptions import ValidationError
-from .models import UserProfile
+from .models import UserProfile, Student, Enrollment, Course
 
 def validate_min_length(value: str, n: int, msg: str):
     if value is None or len(value.strip()) < n:
@@ -122,3 +122,82 @@ class LogonForm(forms.Form):
     
     def get_user(self):
         return getattr(self, 'user_cache', None)
+
+class StudentRegistrationForm(forms.ModelForm):
+    """Форма регистрации студента в системе курсов"""
+    confirm_email = forms.EmailField(
+        label='Подтвердите Email',
+        widget=forms.EmailInput(attrs={'class': 'form-control'})
+    )
+    
+    class Meta:
+        model = Student
+        fields = ['first_name', 'last_name', 'email', 'birth_date', 'faculty']
+        widgets = {
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'birth_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'faculty': forms.Select(attrs={'class': 'form-control'}),
+        }
+        labels = {
+            'first_name': 'Имя',
+            'last_name': 'Фамилия',
+            'email': 'Email',
+            'birth_date': 'Дата рождения',
+            'faculty': 'Факультет'
+        }
+    
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if Student.objects.filter(email=email).exists():
+            raise ValidationError('Студент с таким email уже зарегистрирован.')
+        return email
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        email = cleaned_data.get('email')
+        confirm_email = cleaned_data.get('confirm_email')
+        
+        if email and confirm_email and email != confirm_email:
+            raise ValidationError('Email адреса не совпадают.')
+        
+        return cleaned_data
+
+
+class EnrollmentForm(forms.ModelForm):
+    """Форма записи на курс"""
+    class Meta:
+        model = Enrollment
+        fields = ['student', 'course']
+        widgets = {
+            'student': forms.Select(attrs={'class': 'form-control'}),
+            'course': forms.Select(attrs={'class': 'form-control'}),
+        }
+        labels = {
+            'student': 'Студент',
+            'course': 'Курс'
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Показываем только активных студентов
+        self.fields['student'].queryset = Student.objects.filter(is_active=True)
+        # Показываем только активные курсы
+        self.fields['course'].queryset = Course.objects.filter(is_active=True)
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        student = cleaned_data.get('student')
+        course = cleaned_data.get('course')
+        
+        if student and course:
+            # Проверка на существующую запись
+            if Enrollment.objects.filter(student=student, course=course).exists():
+                raise ValidationError('Этот студент уже записан на данный курс.')
+            
+            # Проверка на доступность мест
+            if not course.has_available_seats:
+                raise ValidationError('На этом курсе больше нет свободных мест.')
+        
+        return cleaned_data

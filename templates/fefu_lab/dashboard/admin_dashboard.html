@@ -1,0 +1,17 @@
+{% extends "../../base.html" %}
+{% block title %}Панель администратора{% endblock %}
+{% block heading %}Панель администратора{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <h2>Статистика системы</h2>
+    
+    <ul>
+        <li>Всего пользователей: {{ total_users }}</li>
+        <li>Всего курсов: {{ total_courses }}</li>
+        <li>Всего записей на курсы: {{ total_enrollments }}</li>
+    </ul>
+    
+    <p><a href="/admin/">Перейти в админку Django</a></p>
+</div>
+{% endblock %}

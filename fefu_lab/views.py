@@ -1,12 +1,17 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse, Http404
 from django.contrib import messages
+from django.contrib.auth import login as auth_login, logout as auth_logout, authenticate
+from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Count
 from django.core.paginator import Paginator
-from django.views.decorators.csrf import csrf_protect
 
-from .forms import FeedbackForm, RegistrationForm, LogonForm, StudentRegistrationForm, EnrollmentForm
-from .models import UserProfile, Student, Course, Instructor, Enrollment
+from .forms import (
+    FeedbackForm, UserRegistrationForm, EmailAuthenticationForm,
+    EnrollmentForm, ProfileEditForm
+)
+from .models import Student, Course, Instructor, Enrollment
+from .decorators import role_required, student_required, teacher_required, admin_required
+
 
 def home(request):
     total_students = Student.objects.filter(is_active=True).count()
@@ -16,7 +21,6 @@ def home(request):
     
     ctx = {
         "title": "Главная",
-        "user": request.session.get('username'),
         "total_students": total_students,
         "total_courses": total_courses,
         "total_instructors": total_instructors,
@@ -31,15 +35,14 @@ def about(request):
 
 def student_list(request):
     """Список студентов с поиском и фильтрацией"""
-    students = Student.objects.filter(is_active=True).order_by('last_name', 'first_name')
+    students = Student.objects.filter(is_active=True).select_related('user').order_by('user__last_name', 'user__first_name')
     
-    # Поиск
     search_query = request.GET.get('search', '')
     if search_query:
         students = students.filter(
-            Q(first_name__icontains=search_query) |
-            Q(last_name__icontains=search_query) |
-            Q(email__icontains=search_query)
+            Q(user__first_name__icontains=search_query) |
+            Q(user__last_name__icontains=search_query) |
+            Q(user__email__icontains=search_query)
         )
     
     faculty = request.GET.get('faculty', '')
@@ -61,10 +64,10 @@ def student_list(request):
 
 
 def student_detail(request, student_id):
-    """Детальная информация о студенте из БД"""
+    """Детальная информация о студенте"""
     student = get_object_or_404(
-        Student.objects.prefetch_related('enrollments__course'),
-        pk=student_id,  # используем student_id из URL
+        Student.objects.prefetch_related('enrollments__course').select_related('user'),
+        pk=student_id,
         is_active=True
     )
     
@@ -73,14 +76,14 @@ def student_detail(request, student_id):
     context = {
         'title': f'{student.full_name}',
         'student': student,
-        'student_id': student_id,  # для совместимости со старыми шаблонами
+        'student_id': student_id,
         'enrollments': enrollments
     }
     return render(request, 'fefu_lab/student_detail.html', context)
 
 
 def course_list(request):
-    """Список курсов с поиском и фильтрацией"""
+    """Список курсов"""
     courses = Course.objects.filter(is_active=True).select_related('instructor').order_by('-created_at')
     
     search_query = request.GET.get('search', '')
@@ -109,7 +112,7 @@ def course_list(request):
 
 
 def course_detail(request, course_slug):
-    """Детальная информация о курсе из БД"""
+    """Детальная информация о курсе"""
     course = get_object_or_404(
         Course.objects.select_related('instructor').prefetch_related('enrollments'),
         slug=course_slug,
@@ -119,35 +122,12 @@ def course_detail(request, course_slug):
     context = {
         'title': course.title,
         'course': course,
-        'course_slug': course_slug,  
+        'course_slug': course_slug,
     }
     return render(request, 'fefu_lab/course_detail.html', context)
 
 
-def student_register(request):
-    """Регистрация нового студента в системе"""
-    if request.method == 'POST':
-        form = StudentRegistrationForm(request.POST)
-        if form.is_valid():
-            try:
-                student = form.save()
-                messages.success(
-                    request,
-                    f'Регистрация прошла успешно! Добро пожаловать, {student.full_name}!'
-                )
-                return redirect('fefu_lab:student_detail', student_id=student.pk)
-            except Exception as e:
-                messages.error(request, f'Ошибка при регистрации: {str(e)}')
-    else:
-        form = StudentRegistrationForm()
-    
-    context = {
-        'title': 'Регистрация студента',
-        'form': form
-    }
-    return render(request, 'fefu_lab/student_register.html', context)
-
-
+@login_required(login_url='/login/')
 def enroll_student(request, course_slug):
     """Запись студента на курс"""
     course = get_object_or_404(Course, slug=course_slug, is_active=True)
@@ -174,6 +154,7 @@ def enroll_student(request, course_slug):
     }
     return render(request, 'fefu_lab/enrollment.html', context)
 
+
 def feedback(request):
     if request.method == 'POST':
         form = FeedbackForm(request.POST)
@@ -191,44 +172,138 @@ def feedback(request):
 
 
 def register(request):
+    """Регистрация нового пользователя"""
     if request.method == 'POST':
-        form = RegistrationForm(request.POST)
+        form = UserRegistrationForm(request.POST)
         if form.is_valid():
-            UserProfile.objects.create(
-                username=form.cleaned_data['username'],
-                email=form.cleaned_data['email'],
-                password=form.cleaned_data['password'] 
-            )
-            return render(request, 'fefu_lab/success.html', {
-                'title': 'Регистрация',
-                'message': 'Регистрация прошла успешно.'
-            })
+            user = form.save()
+            auth_login(request, user, backend='fefu_lab.backends.EmailBackend')
+            messages.success(request, f'Добро пожаловать, {user.first_name}!')
+            return redirect('fefu_lab:profile')
     else:
-        form = RegistrationForm()
-    return render(request, 'fefu_lab/register.html', {
+        form = UserRegistrationForm()
+    
+    return render(request, 'fefu_lab/registration/register.html', {
         'form': form,
         'title': 'Регистрация'
     })
 
 
-@csrf_protect
-def login(request):
+def login_view(request):
+    """Вход в систему"""
+    if request.user.is_authenticated:
+        return redirect('fefu_lab:profile')
+    
     if request.method == 'POST':
-        form = LogonForm(request.POST)
+        form = EmailAuthenticationForm(request, data=request.POST)
         if form.is_valid():
-            user = form.get_user()
-            request.session['user_id'] = user.id
-            request.session['username'] = user.username
-            return render(request, 'fefu_lab/success.html', {
-                'title': 'Вход',
-                'message': 'Вход прошел успешно.'
-            })
+            email = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password')
+            user = authenticate(request, username=email, password=password)
+            
+            if user is not None:
+                auth_login(request, user)
+                messages.success(request, f'Добро пожаловать, {user.first_name}!')
+                next_url = request.GET.get('next', 'fefu_lab:profile')
+                return redirect(next_url)
+            else:
+                messages.error(request, 'Неверный email или пароль.')
+        else:
+            messages.error(request, 'Неверный email или пароль.')
     else:
-        form = LogonForm()
-    return render(request, 'fefu_lab/login.html', {
+        form = EmailAuthenticationForm()
+    
+    return render(request, 'fefu_lab/registration/login.html', {
         'form': form,
         'title': 'Вход'
     })
+
+
+@login_required(login_url='/login/')
+def logout_view(request):
+    """Выход из системы"""
+    auth_logout(request)
+    messages.info(request, 'Вы вышли из системы.')
+    return redirect('fefu_lab:index')
+
+
+@login_required(login_url='/login/')
+def profile(request):
+    """Профиль пользователя"""
+    if not hasattr(request.user, 'student_profile'):
+        messages.error(request, 'Профиль не найден.')
+        return redirect('fefu_lab:index')
+    
+    profile = request.user.student_profile
+    
+    if request.method == 'POST':
+        form = ProfileEditForm(request.POST, request.FILES, instance=profile)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Профиль успешно обновлен!')
+            return redirect('fefu_lab:profile')
+    else:
+        form = ProfileEditForm(instance=profile)
+    
+    context = {
+        'title': 'Мой профиль',
+        'profile': profile,
+        'form': form
+    }
+    return render(request, 'fefu_lab/registration/profile.html', context)
+
+
+@login_required(login_url='/login/')
+@student_required
+def student_dashboard(request):
+    """Личный кабинет студента"""
+    profile = request.user.student_profile
+    enrollments = Enrollment.objects.filter(
+        student=profile,
+        status='ACTIVE'
+    ).select_related('course')
+    
+    context = {
+        'title': 'Личный кабинет',
+        'profile': profile,
+        'enrollments': enrollments
+    }
+    return render(request, 'fefu_lab/dashboard/student_dashboard.html', context)
+
+
+@login_required(login_url='/login/')
+@teacher_required
+def teacher_dashboard(request):
+    """Личный кабинет преподавателя"""
+    profile = request.user.student_profile
+    # Здесь можно добавить логику для курсов преподавателя
+    courses = Course.objects.filter(is_active=True)
+    
+    context = {
+        'title': 'Кабинет преподавателя',
+        'profile': profile,
+        'courses': courses
+    }
+    return render(request, 'fefu_lab/dashboard/teacher_dashboard.html', context)
+
+
+@login_required(login_url='/login/')
+@admin_required
+def admin_dashboard(request):
+    """Панель администратора"""
+    profile = request.user.student_profile
+    total_users = Student.objects.count()
+    total_courses = Course.objects.count()
+    total_enrollments = Enrollment.objects.count()
+    
+    context = {
+        'title': 'Панель администратора',
+        'profile': profile,
+        'total_users': total_users,
+        'total_courses': total_courses,
+        'total_enrollments': total_enrollments
+    }
+    return render(request, 'fefu_lab/dashboard/admin_dashboard.html', context)
 
 
 def page_not_found(request, exception):

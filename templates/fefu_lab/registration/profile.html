@@ -1,0 +1,27 @@
+{% extends "../../base.html" %}
+{% block title %}Профиль{% endblock %}
+{% block heading %}Мой профиль{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <h2>{{ user.get_full_name }}</h2>
+    <p><strong>Email:</strong> {{ user.email }}</p>
+    <p><strong>Роль:</strong> {{ profile.get_role_display }}</p>
+    <p><strong>Факультет:</strong> {{ profile.get_faculty_display }}</p>
+    
+    <h3>Редактировать профиль</h3>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% for field in form %}
+            <div class="form-group">
+                {{ field.label_tag }}
+                {{ field }}
+                {% if field.errors %}
+                    <div class="error">{{ field.errors }}</div>
+                {% endif %}
+            </div>
+        {% endfor %}
+        <button type="submit">Сохранить</button>
+    </form>
+</div>
+{% endblock %}

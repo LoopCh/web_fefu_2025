@@ -1,10 +1,14 @@
 from django import forms
+from django.contrib.auth.models import User
+from django.contrib.auth.forms import AuthenticationForm
 from django.core.exceptions import ValidationError
-from .models import UserProfile, Student, Enrollment, Course
+from .models import Student, Enrollment, Course
+
 
 def validate_min_length(value: str, n: int, msg: str):
     if value is None or len(value.strip()) < n:
         raise ValidationError(msg)
+
 
 class FeedbackForm(forms.Form):
     name = forms.CharField(
@@ -39,130 +43,137 @@ class FeedbackForm(forms.Form):
         return msg.strip()
 
 
-class RegistrationForm(forms.Form):
-    username = forms.CharField(
-        max_length=50,
-        label='Логин',
-        widget=forms.TextInput(attrs={'class': 'form-control'}),
-        required=True
-    )
-    email = forms.EmailField(
-        label='Email',
-        widget=forms.EmailInput(attrs={'class': 'form-control'}),
-        required=True
-    )
+class UserRegistrationForm(forms.ModelForm):
+    """Форма регистрации пользователя с профилем"""
     password = forms.CharField(
         label='Пароль',
         widget=forms.PasswordInput(attrs={'class': 'form-control'}),
-        required=True
+        min_length=8
     )
     password_confirm = forms.CharField(
         label='Подтверждение пароля',
-        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
-        required=True
+        widget=forms.PasswordInput(attrs={'class': 'form-control'})
     )
-
-    def clean_username(self):
-        username = self.cleaned_data.get('username', '')
-        validate_min_length(username, 1, "Логин обязателен")
-        if UserProfile.objects.filter(username__iexact=username.strip()).exists():
-            raise ValidationError("Пользователь с таким логином уже существует")
-        return username.strip()
-
-    def clean_email(self):
-        email = self.cleaned_data.get('email', '').strip()
-        if UserProfile.objects.filter(email__iexact=email).exists():
-            raise ValidationError("Пользователь с таким email уже существует")
-        return email
-
-    def clean_password(self):
-        pwd = self.cleaned_data.get('password', '')
-        if len(pwd) < 8:
-            raise ValidationError("Пароль должен быть не короче 8 символов")
-        return pwd
-
-    def clean(self):
-        cleaned = super().clean()
-        p1 = cleaned.get('password')
-        p2 = cleaned.get('password_confirm')
-        if p1 and p2 and p1 != p2:
-            raise ValidationError("Пароли не совпадают")
-        return cleaned
+    faculty = forms.ChoiceField(
+        label='Факультет',
+        choices=Student.FACULTY_CHOICES,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    role = forms.ChoiceField(
+        label='Роль',
+        choices=Student.ROLE_CHOICES,
+        initial='STUDENT',
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
     
-class LogonForm(forms.Form):
-    username = forms.CharField(
-        max_length=50,
-        label='Логин',
-        widget=forms.TextInput(attrs={'class': 'form-control'}),
-        required=True
-    )
-    password = forms.CharField(
-        label='Пароль',
-        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
-        required=True
-    )
-
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'email']
+        widgets = {
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+        }
+        labels = {
+            'first_name': 'Имя',
+            'last_name': 'Фамилия',
+            'email': 'Email'
+        }
+    
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if User.objects.filter(email=email).exists():
+            raise ValidationError('Пользователь с таким email уже существует.')
+        return email
+    
     def clean(self):
         cleaned_data = super().clean()
-        username = cleaned_data.get('username')
         password = cleaned_data.get('password')
-
-        if username and password:
-            try:
-                user = UserProfile.objects.get(username=username)
-            except UserProfile.DoesNotExist:
-                raise ValidationError("Неверное имя пользователя или пароль.")
-            
-            if password != user.password:
-                raise ValidationError("Неверное имя пользователя или пароль.")
-            
-            self.user_cache = user
+        password_confirm = cleaned_data.get('password_confirm')
+        
+        if password and password_confirm and password != password_confirm:
+            raise ValidationError('Пароли не совпадают.')
         
         return cleaned_data
     
-    def get_user(self):
-        return getattr(self, 'user_cache', None)
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.username = self.cleaned_data['email']  # используем email как username
+        user.set_password(self.cleaned_data['password'])  # хешируем пароль
+        
+        if commit:
+            user.save()
+            # Обновляем профиль студента
+            profile = user.student_profile
+            profile.faculty = self.cleaned_data['faculty']
+            profile.role = self.cleaned_data['role']
+            profile.save()
+        
+        return user
 
-class StudentRegistrationForm(forms.ModelForm):
-    """Форма регистрации студента в системе курсов"""
-    confirm_email = forms.EmailField(
-        label='Подтвердите Email',
+
+class EmailAuthenticationForm(AuthenticationForm):
+    """Форма входа по email"""
+    username = forms.EmailField(
+        label='Email',
+        widget=forms.EmailInput(attrs={'class': 'form-control', 'autofocus': True})
+    )
+    password = forms.CharField(
+        label='Пароль',
+        widget=forms.PasswordInput(attrs={'class': 'form-control'})
+    )
+
+
+class ProfileEditForm(forms.ModelForm):
+    """Форма редактирования профиля"""
+    first_name = forms.CharField(
+        label='Имя',
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    last_name = forms.CharField(
+        label='Фамилия',
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    email = forms.EmailField(
+        label='Email',
         widget=forms.EmailInput(attrs={'class': 'form-control'})
     )
     
     class Meta:
         model = Student
-        fields = ['first_name', 'last_name', 'email', 'birth_date', 'faculty']
+        fields = ['phone', 'bio', 'faculty', 'avatar']
         widgets = {
-            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'email': forms.EmailInput(attrs={'class': 'form-control'}),
-            'birth_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'phone': forms.TextInput(attrs={'class': 'form-control'}),
+            'bio': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
             'faculty': forms.Select(attrs={'class': 'form-control'}),
+            'avatar': forms.FileInput(attrs={'class': 'form-control'}),
         }
         labels = {
-            'first_name': 'Имя',
-            'last_name': 'Фамилия',
-            'email': 'Email',
-            'birth_date': 'Дата рождения',
-            'faculty': 'Факультет'
+            'phone': 'Телефон',
+            'bio': 'О себе',
+            'faculty': 'Факультет',
+            'avatar': 'Аватар'
         }
     
-    def clean_email(self):
-        email = self.cleaned_data.get('email')
-        if Student.objects.filter(email=email).exists():
-            raise ValidationError('Студент с таким email уже зарегистрирован.')
-        return email
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.user:
+            self.fields['first_name'].initial = self.instance.user.first_name
+            self.fields['last_name'].initial = self.instance.user.last_name
+            self.fields['email'].initial = self.instance.user.email
     
-    def clean(self):
-        cleaned_data = super().clean()
-        email = cleaned_data.get('email')
-        confirm_email = cleaned_data.get('confirm_email')
+    def save(self, commit=True):
+        profile = super().save(commit=False)
+        user = profile.user
+        user.first_name = self.cleaned_data['first_name']
+        user.last_name = self.cleaned_data['last_name']
+        user.email = self.cleaned_data['email']
         
-        if email and confirm_email and email != confirm_email:
-            raise ValidationError('Email адреса не совпадают.')
+        if commit:
+            user.save()
+            profile.save()
         
-        return cleaned_data
+        return profile
 
 
 class EnrollmentForm(forms.ModelForm):
@@ -181,9 +192,7 @@ class EnrollmentForm(forms.ModelForm):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Показываем только активных студентов
         self.fields['student'].queryset = Student.objects.filter(is_active=True)
-        # Показываем только активные курсы
         self.fields['course'].queryset = Course.objects.filter(is_active=True)
     
     def clean(self):
@@ -192,11 +201,9 @@ class EnrollmentForm(forms.ModelForm):
         course = cleaned_data.get('course')
         
         if student and course:
-            # Проверка на существующую запись
             if Enrollment.objects.filter(student=student, course=course).exists():
                 raise ValidationError('Этот студент уже записан на данный курс.')
             
-            # Проверка на доступность мест
             if not course.has_available_seats:
                 raise ValidationError('На этом курсе больше нет свободных мест.')
         

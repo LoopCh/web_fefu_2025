@@ -1,0 +1,14 @@
+{% extends "../../base.html" %}
+{% block title %}Кабинет преподавателя{% endblock %}
+{% block heading %}Кабинет преподавателя{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <h2>Добро пожаловать, {{ user.first_name }}!</h2>
+    
+    <h3>Управление курсами</h3>
+    <p>Здесь вы можете управлять своими курсами.</p>
+    
+    <a href="{% url 'fefu_lab:course_list' %}">Все курсы</a>
+</div>
+{% endblock %}

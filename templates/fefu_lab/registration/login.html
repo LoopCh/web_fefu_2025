@@ -1,0 +1,35 @@
+{% extends "../../base.html" %}
+{% block title %}Вход{% endblock %}
+{% block heading %}Вход в систему{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <form method="post">
+        {% csrf_token %}
+        
+        {% if form.non_field_errors %}
+            <div class="error">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+        
+        {% for field in form %}
+            <div class="form-group">
+                {{ field.label_tag }}
+                {{ field }}
+                {% if field.errors %}
+                    <div class="error">
+                        {% for error in field.errors %}
+                            <div>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+        
+        <button type="submit">Войти</button>
+    </form>
+    
+    <p>Нет аккаунта? <a href="{% url 'fefu_lab:register' %}">Зарегистрироваться</a></p>
+</div>
+{% endblock %}

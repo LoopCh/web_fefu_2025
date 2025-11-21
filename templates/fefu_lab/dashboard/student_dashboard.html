@@ -1,0 +1,26 @@
+{% extends "../../base.html" %}
+{% block title %}Личный кабинет{% endblock %}
+{% block heading %}Личный кабинет студента{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <h2>Добро пожаловать, {{ user.first_name }}!</h2>
+    
+    <h3>Мои курсы</h3>
+    {% if enrollments %}
+        <ul>
+            {% for enrollment in enrollments %}
+                <li>
+                    <a href="{% url 'fefu_lab:course_detail' enrollment.course.slug %}">
+                        {{ enrollment.course.title }}
+                    </a>
+                    - {{ enrollment.get_status_display }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Вы пока не записаны ни на один курс.</p>
+        <a href="{% url 'fefu_lab:course_list' %}">Посмотреть доступные курсы</a>
+    {% endif %}
+</div>
+{% endblock %}

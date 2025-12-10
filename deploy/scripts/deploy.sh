@@ -6,7 +6,7 @@ PROJECT_DIR="/var/www/$PROJECT_NAME"
 REPO_URL="https://github.com/your-username/your-repo.git"
 DB_NAME="fefu_lab_db"
 DB_USER="fefu_user"
-DB_PASSWORD="your-secure-password"
+DB_PASSWORD="admin"
 
 echo "=== Деплой Django приложения ==="
 
@@ -46,9 +46,9 @@ sudo "$PROJECT_DIR/venv/bin/pip" install -r "$PROJECT_DIR/requirements.txt"
 # 6. Миграция базы данных
 echo "[6/10] Применение миграций..."
 cd "$PROJECT_DIR"
-sudo -E "$PROJECT_DIR/venv/bin/python" manage.py migrate --settings=your_project.settings
-sudo -E "$PROJECT_DIR/venv/bin/python" manage.py loaddata data.json --settings=your_project.settings
-sudo -E "$PROJECT_DIR/venv/bin/python" manage.py collectstatic --no-input --settings=your_project.settings
+sudo -E "$PROJECT_DIR/venv/bin/python" manage.py migrate --settings=web_2025.settings
+sudo -E "$PROJECT_DIR/venv/bin/python" manage.py loaddata data.json --settings=web_2025.settings
+sudo -E "$PROJECT_DIR/venv/bin/python" manage.py collectstatic --no-input --settings=web_2025.settings
 
 # 7. Настройка директорий и прав
 echo "[7/10] Настройка директорий..."

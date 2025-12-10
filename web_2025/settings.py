@@ -73,8 +73,11 @@ WSGI_APPLICATION = 'web_2025.wsgi.application'
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Статика и медиа - объявляем ДО блока if/else
+
 STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -172,7 +175,3 @@ SESSION_COOKIE_AGE = 1209600  # 2 недели
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_COOKIE_SECURE = False  # True для HTTPS в продакшене
 CSRF_COOKIE_SECURE = False     # True для HTTPS в продакшене
-
-# Media files
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'

@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -73,12 +74,34 @@ WSGI_APPLICATION = 'web_2025.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+ENV = os.environ.get('DJANGO_ENV', 'development')
+
+if ENV == 'production':
+    DEBUG = False
+    SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
+    ALLOWED_HOSTS = ['localhost']  # В production укажите конкретный IP
+    
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('DB_NAME'),
+            'USER': os.environ.get('DB_USER'),
+            'PASSWORD': os.environ.get('DB_PASSWORD'),
+            'HOST': os.environ.get('DB_HOST', 'localhost'),
+            'PORT': os.environ.get('DB_PORT', '5432'),
+        }
     }
-}
+else:
+    DEBUG = True
+    SECRET_KEY = 'dev-secret-key'
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+    
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
@@ -141,5 +164,11 @@ SESSION_COOKIE_SECURE = False  # True для HTTPS в продакшене
 CSRF_COOKIE_SECURE = False     # True для HTTPS в продакшене
 
 # Media files (для аватаров)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# Статические файлы
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'static'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'

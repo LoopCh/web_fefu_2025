@@ -1,0 +1,30 @@
+[Unit]
+Description=FEFU Lab Gunicorn daemon
+After=network.target postgresql.service
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/fefu_lab
+Environment="DJANGO_ENV=production"
+Environment="PATH=/var/www/fefu_lab/venv/bin"
+Environment="DJANGO_SECRET_KEY=your-secret-key-here-change-this"
+Environment="DB_NAME=fefu_lab_db"
+Environment="DB_USER=fefu_user"
+Environment="DB_PASSWORD=your-secure-password"
+Environment="DB_HOST=localhost"
+Environment="DB_PORT=5432"
+
+ExecStart=/var/www/fefu_lab/venv/bin/gunicorn \
+    --workers 3 \
+    --bind 127.0.0.1:8000 \
+    --access-logfile /var/log/gunicorn/access.log \
+    --error-logfile /var/log/gunicorn/error.log \
+    your_project_name.wsgi:application
+
+ExecReload=/bin/kill -s HUP $MAINPID
+ExecStop=/bin/kill -s TERM $MAINPID
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

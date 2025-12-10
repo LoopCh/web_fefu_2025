@@ -3,7 +3,7 @@ set -e
 
 PROJECT_NAME="fefu_lab"
 PROJECT_DIR="/var/www/$PROJECT_NAME"
-REPO_URL="https://github.com/your-username/your-repo.git"
+REPO_URL="https://github.com/LoopCh/web_fefu_2025"
 DB_NAME="fefu_lab_db"
 DB_USER="fefu_user"
 DB_PASSWORD="admin"

@@ -71,19 +71,25 @@ TEMPLATES = [
 WSGI_APPLICATION = 'web_2025.wsgi.application'
 
 
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Статика и медиа - объявляем ДО блока if/else
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# Переменные окружения
 ENV = os.environ.get('DJANGO_ENV', 'development')
 
 if ENV == 'production':
     DEBUG = False
     SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
-    ALLOWED_HOSTS = ['*']  # Измените на конкретный IP позже
-    
-    # Static и Media для production
-    STATIC_ROOT = BASE_DIR / 'staticfiles'  # Изменили на staticfiles!
-    MEDIA_ROOT = BASE_DIR / 'media'
+    ALLOWED_HOSTS = ['*']
     
     DATABASES = {
         'default': {

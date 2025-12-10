@@ -80,6 +80,11 @@ if ENV == 'production':
     DEBUG = False
     SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
     ALLOWED_HOSTS = ['localhost']  # В production укажите конкретный IP
+
+    # В production используем только STATIC_ROOT
+    STATIC_ROOT = BASE_DIR / 'static'
+    # STATICFILES_DIRS не нужен в production
+    STATICFILES_DIRS = []
     
     DATABASES = {
         'default': {

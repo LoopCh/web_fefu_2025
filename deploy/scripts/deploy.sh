@@ -46,9 +46,32 @@ sudo "$PROJECT_DIR/venv/bin/pip" install -r "$PROJECT_DIR/requirements.txt"
 # 6. Миграция базы данных
 echo "[6/10] Применение миграций..."
 cd "$PROJECT_DIR"
-sudo -E "$PROJECT_DIR/venv/bin/python" manage.py migrate --settings=web_2025.settings
-sudo -E "$PROJECT_DIR/venv/bin/python" manage.py loaddata data.json --settings=web_2025.settings
-sudo -E "$PROJECT_DIR/venv/bin/python" manage.py collectstatic --no-input --settings=web_2025.settings
+sudo DJANGO_ENV=production \
+     DB_NAME="$DB_NAME" \
+     DB_USER="$DB_USER" \
+     DB_PASSWORD="$DB_PASSWORD" \
+     DB_HOST=localhost \
+     DB_PORT=5432 \
+     DJANGO_SECRET_KEY=your-secret-key-here-change-this \
+     "$PROJECT_DIR/venv/bin/python" manage.py migrate --settings=web_2025.settings
+
+sudo DJANGO_ENV=production \
+     DB_NAME="$DB_NAME" \
+     DB_USER="$DB_USER" \
+     DB_PASSWORD="$DB_PASSWORD" \
+     DB_HOST=localhost \
+     DB_PORT=5432 \
+     DJANGO_SECRET_KEY=your-secret-key-here-change-this \
+     "$PROJECT_DIR/venv/bin/python" manage.py loaddata data.json --settings=web_2025.settings
+
+sudo DJANGO_ENV=production \
+     DB_NAME="$DB_NAME" \
+     DB_USER="$DB_USER" \
+     DB_PASSWORD="$DB_PASSWORD" \
+     DB_HOST=localhost \
+     DB_PORT=5432 \
+     DJANGO_SECRET_KEY=your-secret-key-here-change-this \
+     "$PROJECT_DIR/venv/bin/python" manage.py collectstatic --no-input --settings=web_2025.settings
 
 # 7. Настройка директорий и прав
 echo "[7/10] Настройка директорий..."

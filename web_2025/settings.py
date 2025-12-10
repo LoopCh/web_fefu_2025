@@ -79,12 +79,11 @@ ENV = os.environ.get('DJANGO_ENV', 'development')
 if ENV == 'production':
     DEBUG = False
     SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
-    ALLOWED_HOSTS = ['localhost']  # В production укажите конкретный IP
-
-    # В production используем только STATIC_ROOT
-    STATIC_ROOT = BASE_DIR / 'static'
-    # STATICFILES_DIRS не нужен в production
-    STATICFILES_DIRS = []
+    ALLOWED_HOSTS = ['*']  # Измените на конкретный IP позже
+    
+    # Static и Media для production
+    STATIC_ROOT = BASE_DIR / 'staticfiles'  # Изменили на staticfiles!
+    MEDIA_ROOT = BASE_DIR / 'media'
     
     DATABASES = {
         'default': {
@@ -144,7 +143,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
-STATICFILES_DIRS = [BASE_DIR / 'static']
+#STATICFILES_DIRS = [BASE_DIR / 'static']
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -168,12 +167,6 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_COOKIE_SECURE = False  # True для HTTPS в продакшене
 CSRF_COOKIE_SECURE = False     # True для HTTPS в продакшене
 
-# Media files (для аватаров)
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
-
-# Статические файлы
-STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'static'
+# Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'

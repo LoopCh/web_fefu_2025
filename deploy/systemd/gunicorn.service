@@ -11,7 +11,7 @@ Environment="PATH=/var/www/fefu_lab/venv/bin"
 Environment="DJANGO_SECRET_KEY=your-secret-key-here-change-this"
 Environment="DB_NAME=fefu_lab_db"
 Environment="DB_USER=fefu_user"
-Environment="DB_PASSWORD=your-secure-password"
+Environment="DB_PASSWORD=admin"
 Environment="DB_HOST=localhost"
 Environment="DB_PORT=5432"
 
@@ -20,7 +20,7 @@ ExecStart=/var/www/fefu_lab/venv/bin/gunicorn \
     --bind 127.0.0.1:8000 \
     --access-logfile /var/log/gunicorn/access.log \
     --error-logfile /var/log/gunicorn/error.log \
-    your_project_name.wsgi:application
+    web_2025.wsgi:application
 
 ExecReload=/bin/kill -s HUP $MAINPID
 ExecStop=/bin/kill -s TERM $MAINPID

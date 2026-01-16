@@ -35,7 +35,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # Твоё приложение
     'fefu_lab.apps.FefuLabConfig'
 ]
 
@@ -83,7 +82,7 @@ if os.environ.get('DB_HOST'):
             'NAME': os.environ.get('DB_NAME'),
             'USER': os.environ.get('DB_USER'),
             'PASSWORD': os.environ.get('DB_PASSWORD'),
-            'HOST': os.environ.get('DB_HOST'),  # Здесь будет 'db' (имя сервиса из docker-compose)
+            'HOST': os.environ.get('DB_HOST'), 
             'PORT': os.environ.get('DB_PORT', '5432'),
         }
     }
@@ -131,14 +130,7 @@ USE_TZ = True
 # ===================================================
 
 STATIC_URL = '/static/'
-# Здесь Docker будет собирать статику
 STATIC_ROOT = BASE_DIR / 'static'
-
-# Если у тебя есть дополнительные папки со статикой в проекте (например, global_static)
-# раскомментируй и создай папку, иначе collectstatic может ругаться, если папки нет.
-# STATICFILES_DIRS = [
-#     BASE_DIR / 'assets', 
-# ]
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'

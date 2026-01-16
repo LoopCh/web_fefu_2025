@@ -18,9 +18,6 @@ COPY ./requirements.txt .
 # 1. Создаем wheels (архивы пакетов) для финального образа
 RUN pip wheel --no-cache-dir --no-deps --wheel-dir /usr/src/app/wheels -r requirements.txt
 
-# 2. !!! ВАЖНОЕ ИСПРАВЛЕНИЕ !!!
-# Устанавливаем зависимости в самом builder-е, 
-# чтобы мы могли запустить python manage.py collectstatic прямо здесь.
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Копируем код проекта

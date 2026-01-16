@@ -86,7 +86,7 @@ sudo ln -sf /etc/nginx/sites-available/fefu_lab.conf /etc/nginx/sites-enabled/
 sudo rm -f /etc/nginx/sites-enabled/default
 sudo nginx -t
 
-# 9. Настройка и запуск Gunicorn
+# 9. Настройка и запуск Gunicorn 
 echo "[9/10] Настройка Gunicorn..."
 sudo cp "$PROJECT_DIR/deploy/systemd/gunicorn.service" /etc/systemd/system/
 sudo systemctl daemon-reload
